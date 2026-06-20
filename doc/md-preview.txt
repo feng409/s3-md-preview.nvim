@@ -1,0 +1,128 @@
+*md-preview.nvim*  Render markdown to self-contained HTML
+
+==============================================================================
+INTRODUCTION                                                *md-preview-introduction*
+
+md-preview.nvim renders markdown buffers to self-contained HTML files with
+Mermaid diagrams and syntax highlighting. A Rust binary performs all rendering;
+the Neovim plugin pipes buffer content to it and reports the output path or
+URL.
+
+==============================================================================
+REQUIREMENTS                                                *md-preview-requirements*
+
+- Neovim >= 0.10
+- md-preview binary (built from source or downloaded via the lazy.nvim build
+  script)
+
+==============================================================================
+INSTALLATION                                                *md-preview-installation*
+
+With lazy.nvim: >
+
+  {
+    "chemf/md-preview.nvim",
+    build = "nvim -l build.lua",
+    config = function()
+      require("md-preview").setup({})
+    end,
+  }
+
+The build script downloads a pre-built binary when available, or compiles from
+source with Cargo.
+
+Run `:checkhealth md-preview` after installation.
+
+==============================================================================
+CONFIGURATION                                            *md-preview-configuration*
+
+Call `require("md-preview").setup({})` with any of the following options:
+
+                                                    *md-preview-config-bin*
+bin ~
+  Path to the md-preview binary. Default: auto-detect from plugin `bin/`,
+  `target/release/`, or `$PATH`.
+
+                                              *md-preview-config-output_dir*
+output_dir ~
+  Directory for local HTML files. Default: `stdpath("cache") .. "/md-preview"`.
+
+                                                    *md-preview-config-s3*
+s3 ~
+  Table with S3 upload settings. When present, `:Md` defaults to upload mode.
+
+  bucket      S3 bucket name (required)
+  endpoint    S3-compatible endpoint URL (required)
+  region      AWS region (required)
+  key_prefix  Object key prefix (default: "md-preview/")
+  acl         Object ACL, e.g. "public-read" (optional)
+
+                                            *md-preview-config-credentials*
+credentials ~
+  Table for loading S3 credentials from a dotenv file.
+
+  env_file    Path to the env file (required)
+  id_key      Variable name for access key ID (required)
+  secret_key  Variable name for secret access key (required)
+
+                                              *md-preview-config-no_proxy*
+no_proxy ~
+  Clear proxy environment variables before invoking the binary. Default: true.
+
+Example S3 configuration: >
+
+  require("md-preview").setup({
+    s3 = {
+      bucket = "my-bucket",
+      endpoint = "https://s3.amazonaws.com",
+      region = "us-east-1",
+    },
+    credentials = {
+      env_file = "~/.config/md-preview/.env",
+      id_key = "AWS_ACCESS_KEY_ID",
+      secret_key = "AWS_SECRET_ACCESS_KEY",
+    },
+  })
+
+==============================================================================
+COMMANDS                                                      *md-preview-commands*
+
+                                                                *:Md*
+:Md
+  Preview the current markdown buffer. Uses S3 when configured, otherwise
+  writes to output_dir.
+
+                                                            *:MdLocal*
+:MdLocal
+  Always write HTML to output_dir.
+
+                                                           *:MdUpload*
+:MdUpload
+  Always upload to S3. Requires s3 configuration.
+
+All commands require the current buffer to have filetype "markdown".
+
+==============================================================================
+FAQ                                                                *md-preview-faq*
+
+Q: Binary not found after install?
+A: Re-run `:Lazy build md-preview.nvim` or build manually with
+   `cargo build --release`. Check `:checkhealth md-preview`.
+
+Q: S3 upload fails behind a proxy?
+A: Set `no_proxy = true` (default) to strip proxy env vars from the job
+   environment.
+
+Q: How do I preview without uploading?
+A: Use `:MdLocal`, or omit the `s3` table from your configuration.
+
+Q: Binary version mismatch warning?
+A: Rebuild or re-download the binary so it matches the plugin version in
+   Cargo.toml.
+
+==============================================================================
+LICENSE                                                        *md-preview-license*
+
+MIT License. See LICENSE file in the repository root.
+
+vim:tw=78:ts=8:ft=help:norl:
