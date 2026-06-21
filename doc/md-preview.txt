@@ -22,7 +22,7 @@ With lazy.nvim: >
 
   {
     "feng409/s3-md-preview.nvim",
-    build = "nvim -l build.lua",
+    build = "build.lua",
     config = function()
       require("md-preview").setup({})
     end,
