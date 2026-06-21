@@ -5,8 +5,9 @@
 ```bash
 git clone https://github.com/feng409/s3-md-preview.nvim.git
 cd md-preview.nvim
-cargo build
-cargo test
+npm ci
+npm run build
+npm test -- --run
 ```
 
 ## Testing
@@ -14,22 +15,22 @@ cargo test
 Run the full test suite:
 
 ```bash
-cargo test
+npm test -- --run
 ```
 
-Snapshot tests use [insta](https://github.com/mitsuhiko/insta). After intentional output changes:
+Run type checking and the full local check target before opening a pull request:
 
 ```bash
-cargo insta review
+npm run typecheck
+make check
 ```
 
 ## Code Style
 
-Format and lint before submitting:
+TypeScript is checked with `tsc` in strict mode. There is no formatter configured yet; keep edits consistent with the surrounding code.
 
 ```bash
-cargo fmt
-cargo clippy -- -D warnings
+npm run typecheck
 ```
 
 ## Pull Requests
@@ -37,10 +38,10 @@ cargo clippy -- -D warnings
 - Use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages
 - One feature or fix per pull request
 - Include tests for new behavior or bug fixes
-- Ensure `cargo fmt --check`, `cargo clippy -- -D warnings`, and `cargo test` pass locally
+- Ensure `npm test -- --run`, `npm run typecheck`, `npm run build`, and relevant Neovim smoke tests pass locally
 
 ## Release Process
 
-1. Bump the version in `Cargo.toml`
+1. Bump the version in `package.json`
 2. Tag the release: `git tag vX.Y.Z && git push origin vX.Y.Z`
-3. CI builds release binaries for all supported targets and attaches them to the GitHub release
+3. CI builds the Node CLI package and attaches it to the GitHub release

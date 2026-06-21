@@ -1,27 +1,28 @@
-.PHONY: build release test lint fmt check install clean
+.PHONY: deps build release test typecheck lint fmt check install clean
+
+deps:
+	npm ci
 
 build:
-	cargo build
+	npm run build
 
-release:
-	cargo build --release
+release: build
 
 test:
-	cargo test
+	npm test -- --run
 
-lint:
-	cargo clippy -- -D warnings
+typecheck:
+	npm run typecheck
+
+lint: typecheck
 
 fmt:
-	cargo fmt
+	@echo "No formatter is configured."
 
-check: fmt lint test
+check: test typecheck build
 	@echo "All checks passed."
 
-install: release
-	mkdir -p bin
-	cp target/release/md-preview bin/
+install: deps build
 
 clean:
-	cargo clean
-	rm -rf bin/
+	rm -rf bin/ dist/
