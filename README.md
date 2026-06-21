@@ -1,6 +1,15 @@
 # md-preview.nvim
 
-Render markdown buffers to self-contained HTML from Neovim. Mermaid diagrams are rendered server-side through the official Mermaid CLI (`mmdc`) and embedded as inline SVG.
+Render Markdown buffers to self-contained HTML from Neovim — designed for **remote development** workflows where you edit files over SSH.
+
+## Why this plugin?
+
+Existing Markdown preview solutions assume a local desktop environment:
+
+- **Browser-based previewers** (vim-instant-markdown, markdown-preview.nvim) open a local browser tab via WebSocket. This works on your laptop but not when you SSH into a dev server — there is no browser on the remote host and port-forwarding adds friction.
+- **Terminal renderers** (glow, mdcat) display Markdown directly in the terminal. They handle headings and lists well enough, but fall short on images, Mermaid diagrams, syntax-highlighted code blocks, and other rich content that only a real browser can render faithfully.
+
+`md-preview.nvim` takes a different approach: it renders the buffer to a **single self-contained HTML file** (all images base64-embedded, all Mermaid diagrams pre-rendered to SVG) and either saves it locally or uploads it to S3-compatible storage. You get a shareable URL or a file you can open in any browser — no local server, no port forwarding, no lost fidelity.
 
 ## Features
 
