@@ -69,9 +69,11 @@ body {
   padding: 1rem;
 }
 
-.markdown-body .mermaid-diagram {
+.markdown-body pre.mermaid {
   margin: 1.5rem 0;
   overflow-x: auto;
   text-align: center;
+  background: none;
+  border: none;
 }
 `;

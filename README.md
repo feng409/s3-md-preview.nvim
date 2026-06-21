@@ -1,6 +1,6 @@
 # md-preview.nvim
 
-Render Markdown buffers to self-contained HTML from Neovim — designed for **remote development** workflows where you edit files over SSH.
+Render Markdown buffers to HTML from Neovim — designed for **remote development** workflows where you edit files over SSH.
 
 ## Why this plugin?
 
@@ -9,16 +9,15 @@ Existing Markdown preview solutions assume a local desktop environment:
 - **Browser-based previewers** (vim-instant-markdown, markdown-preview.nvim) open a local browser tab via WebSocket. This works on your laptop but not when you SSH into a dev server — there is no browser on the remote host and port-forwarding adds friction.
 - **Terminal renderers** (glow, mdcat) display Markdown directly in the terminal. They handle headings and lists well enough, but fall short on images, Mermaid diagrams, syntax-highlighted code blocks, and other rich content that only a real browser can render faithfully.
 
-`md-preview.nvim` takes a different approach: it renders the buffer to a **single self-contained HTML file** (all images base64-embedded, all Mermaid diagrams pre-rendered to SVG) and either saves it locally or uploads it to S3-compatible storage. You get a shareable URL or a file you can open in any browser — no local server, no port forwarding, no lost fidelity.
+`md-preview.nvim` takes a different approach: it renders the buffer to a **single HTML file** (images base64-embedded, Mermaid diagrams rendered client-side via CDN) and either saves it locally or uploads it to S3-compatible storage. You get a shareable URL or a file you can open in any browser — no local server, no port forwarding.
 
 ## Features
 
-- Self-contained HTML output with embedded CSS, highlighted code, Mermaid SVG, and local images
+- HTML output with embedded CSS, highlighted code, and base64-inlined local images
+- Mermaid diagrams rendered client-side via [mermaid.js CDN](https://cdn.jsdelivr.net/npm/mermaid@11/) — no headless browser needed
 - GitHub-style Markdown features including tables and task lists
-- Official Mermaid rendering via `@mermaid-js/mermaid-cli`, including modern `block-beta` syntax
 - Syntax highlighting powered by Shiki
 - Local file output or S3-compatible upload
-- Relative markdown images resolved from the source file directory and embedded as base64 data URIs
 
 ## Requirements
 
@@ -26,7 +25,7 @@ Existing Markdown preview solutions assume a local desktop environment:
 - Node.js >= 20
 - npm
 
-`build.lua` runs `npm ci` and `npm run build`. The Mermaid renderer is provided by `@mermaid-js/mermaid-cli`, which uses a headless browser through its Node dependencies.
+`build.lua` runs `npm ci` and `npm run build` automatically when lazy.nvim installs or updates the plugin.
 
 ## Architecture
 
@@ -39,13 +38,13 @@ flowchart LR
     subgraph nodeCli [Node CLI]
         B -->|stdin| C[Markdown parser]
         C --> D{Content type}
-        D -->|Mermaid fence| E[mmdc official Mermaid]
+        D -->|Mermaid fence| E["&lt;pre class=mermaid&gt;"]
         D -->|Image URL| F[Base64 embedder]
         D -->|Code fence| G[Shiki highlighter]
-        E --> H[Inline SVG]
+        E --> H[Mermaid CDN script]
         F --> I[Data URI image]
         G --> J[Highlighted HTML]
-        H & I & J --> K[Self-contained HTML]
+        H & I & J --> K[HTML output]
     end
 
     K -->|Local mode| L[HTML file]
@@ -132,7 +131,7 @@ Open a markdown buffer and run one of:
 
 On success, the output path or URL is shown and copied to the clipboard. Relative image paths like `![](./image.png)` are resolved from the markdown file directory.
 
-Run `:checkhealth md-preview` to verify the CLI, Node, npm, mmdc, S3 credentials, and output directory.
+Run `:checkhealth md-preview` to verify the CLI, Node, npm, S3 credentials, and output directory.
 
 ## CLI
 
@@ -157,8 +156,7 @@ bin/md-preview --title test \
 ## Troubleshooting
 
 - `Node.js >= 20 is required`: install a current Node runtime and rerun the plugin build.
-- `mmdc not found`: run `npm ci && npm run build` in the plugin directory.
-- Mermaid render failures: run `node_modules/.bin/mmdc --version` and check headless browser availability.
+- Mermaid diagrams not rendering: the HTML loads mermaid.js from `cdn.jsdelivr.net` — ensure internet access when viewing the file.
 - Missing local images: ensure the markdown buffer is saved so the plugin can pass its directory as `--base-dir`.
 - S3 failures: verify `MD_PREVIEW_BUCKET`, `MD_PREVIEW_ENDPOINT`, `MD_PREVIEW_ACCESS_KEY`, and `MD_PREVIEW_SECRET_KEY`.
 

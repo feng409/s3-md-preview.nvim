@@ -136,13 +136,6 @@ function M.check()
     vim.health.ok("npm found: " .. npm)
   end
 
-  local mmdc = plugin_dir() .. "/node_modules/.bin/mmdc"
-  if vim.fn.executable(mmdc) == 1 then
-    vim.health.ok("mmdc found: " .. mmdc)
-  else
-    vim.health.warn("mmdc not found; run plugin build or `npm ci && npm run build`")
-  end
-
   vim.health.start("Local output")
 
   local out_dir = config.output_dir

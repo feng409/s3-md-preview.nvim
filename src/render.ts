@@ -3,15 +3,13 @@ import taskLists from "markdown-it-task-lists";
 import { codeToHtml } from "shiki";
 
 import { inlineLocalImageTokens } from "./images.js";
-import { renderMermaidToSvg } from "./mermaid.js";
 import { MARKDOWN_CSS } from "./styles.js";
 
-export type MermaidRenderer = (source: string) => Promise<string>;
+const MERMAID_CDN = "https://cdn.jsdelivr.net/npm/mermaid@11.15.0/dist/mermaid.min.js";
 
 export interface RenderOptions {
   title: string;
   baseDir?: string;
-  mermaidRenderer?: MermaidRenderer;
 }
 
 function escapeHtml(value: string): string {
@@ -37,7 +35,11 @@ async function highlightCode(code: string, language: string): Promise<string> {
   }
 }
 
-function wrapHtmlDocument(title: string, body: string): string {
+function wrapHtmlDocument(title: string, body: string, hasMermaid: boolean): string {
+  const mermaidScript = hasMermaid
+    ? `<script src="${MERMAID_CDN}"></script>\n<script>mermaid.initialize({startOnLoad:true});</script>\n`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,7 +54,7 @@ ${MARKDOWN_CSS}
 <article class="markdown-body">
 ${body}
 </article>
-</body>
+${mermaidScript}</body>
 </html>
 `;
 }
@@ -64,10 +66,11 @@ export async function renderMarkdown(markdown: string, options: RenderOptions): 
     typographer: false,
   }).use(taskLists, { enabled: false });
 
-  const mermaidRenderer = options.mermaidRenderer ?? renderMermaidToSvg;
   const env = {};
   const tokens = md.parse(markdown, env);
   await inlineLocalImageTokens(tokens, options.baseDir);
+
+  let hasMermaid = false;
 
   for (const token of tokens) {
     if (token.type !== "fence") {
@@ -84,12 +87,12 @@ export async function renderMarkdown(markdown: string, options: RenderOptions): 
     token.children = null;
 
     if (language === "mermaid") {
-      const svg = await mermaidRenderer(token.content);
-      token.content = `<div class="mermaid-diagram">${svg}</div>\n`;
+      hasMermaid = true;
+      token.content = `<pre class="mermaid">\n${escapeHtml(token.content)}</pre>\n`;
     } else {
       token.content = `${await highlightCode(token.content, language)}\n`;
     }
   }
 
-  return wrapHtmlDocument(options.title, md.renderer.render(tokens, md.options, env));
+  return wrapHtmlDocument(options.title, md.renderer.render(tokens, md.options, env), hasMermaid);
 }

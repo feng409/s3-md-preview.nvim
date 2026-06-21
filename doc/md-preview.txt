@@ -1,13 +1,12 @@
-*md-preview.nvim*  Render markdown to self-contained HTML
+*md-preview.nvim*  Render markdown to HTML
 
 ==============================================================================
 INTRODUCTION                                                *md-preview-introduction*
 
-md-preview.nvim renders markdown buffers to self-contained HTML files with
-Mermaid diagrams and syntax highlighting. A Node.js CLI performs rendering; the
-Neovim plugin pipes buffer content to it and reports the output path or URL.
-Mermaid diagrams are rendered through the official Mermaid CLI (`mmdc`) and
-embedded as inline SVG.
+md-preview.nvim renders markdown buffers to HTML files with syntax highlighting
+and Mermaid diagram support. A Node.js CLI performs rendering; the Neovim plugin
+pipes buffer content to it and reports the output path or URL. Mermaid diagrams
+are rendered client-side via mermaid.js CDN — no headless browser required.
 
 ==============================================================================
 REQUIREMENTS                                                *md-preview-requirements*
@@ -124,9 +123,9 @@ A: Set `no_proxy = true` (default) to strip proxy env vars from the job
 Q: How do I preview without uploading?
 A: Use `:MdLocal`, or omit the `s3` table from your configuration.
 
-Q: mmdc not found?
-A: Re-run the plugin build. The Mermaid CLI is installed through npm into
-   `node_modules/.bin/mmdc`.
+Q: Mermaid diagrams not rendering?
+A: The HTML loads mermaid.js from cdn.jsdelivr.net. Make sure you have internet
+   access when viewing the generated file in a browser.
 
 ==============================================================================
 LICENSE                                                        *md-preview-license*

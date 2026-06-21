@@ -39,7 +39,7 @@ function defaultOutputDir(env: Env): string {
 function buildProgram(): Command {
   return new Command()
     .name("md-preview")
-    .description("Render markdown to self-contained HTML")
+    .description("Render markdown to HTML")
     .version(VERSION)
     .option("--title <title>", "Title for the output HTML", "preview")
     .option("--output-dir <dir>", "Directory for local file output")

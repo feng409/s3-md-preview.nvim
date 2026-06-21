@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { renderMarkdown } from "../src/render.js";
 
 describe("renderMarkdown", () => {
-  it("renders markdown, highlighted code, and Mermaid as inline SVG without browser-side Mermaid JS", async () => {
+  it("renders markdown features: headings, tables, task lists, highlighted code", async () => {
     const markdown = [
       "# Title",
       "",
@@ -20,25 +20,38 @@ describe("renderMarkdown", () => {
       "```ts",
       "const answer: number = 42;",
       "```",
-      "",
-      "```mermaid",
-      "block-beta",
-      "columns 4",
-      'a["chunk_000"]',
-      "```",
     ].join("\n");
 
-    const html = await renderMarkdown(markdown, {
-      title: "sample",
-      mermaidRenderer: async (source) => `<svg data-source="${source.includes("block-beta")}"><text>chunk_000</text></svg>`,
-    });
+    const html = await renderMarkdown(markdown, { title: "sample" });
 
     expect(html).toContain("<h1");
     expect(html).toContain("<table>");
     expect(html).toContain('type="checkbox"');
-    expect(html).toContain("<svg");
-    expect(html).toContain("chunk_000");
-    expect(html).not.toContain("<pre class=\"mermaid\"");
+    expect(html).not.toContain("mermaid.min.js");
+  });
+
+  it("renders mermaid blocks as <pre class='mermaid'> with CDN script", async () => {
+    const markdown = [
+      "# Doc",
+      "",
+      "```mermaid",
+      "graph LR",
+      "  A --> B",
+      "```",
+    ].join("\n");
+
+    const html = await renderMarkdown(markdown, { title: "mermaid" });
+
+    expect(html).toContain('<pre class="mermaid">');
+    expect(html).toContain("A --&gt; B");
+    expect(html).toContain("mermaid.min.js");
+    expect(html).toContain("mermaid.initialize");
+  });
+
+  it("omits mermaid CDN script when no mermaid blocks exist", async () => {
+    const html = await renderMarkdown("# Hello", { title: "plain" });
+
+    expect(html).not.toContain("mermaid.min.js");
     expect(html).not.toContain("mermaid.initialize");
   });
 
@@ -53,6 +66,15 @@ describe("renderMarkdown", () => {
 
     expect(html).toContain("./pixel.png");
     expect(html).not.toContain("data:image/png;base64,");
+  });
+
+  it("escapes script tags inside mermaid fences", async () => {
+    const markdown = "```mermaid\n<script>alert(1)</script>\n```";
+    const html = await renderMarkdown(markdown, { title: "xss" });
+
+    expect(html).toContain("&lt;script&gt;");
+    expect(html).toContain('<pre class="mermaid">');
+    expect(html).not.toContain("<script>alert");
   });
 
   it("escapes raw HTML script tags", async () => {
