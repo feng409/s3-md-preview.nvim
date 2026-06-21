@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Render markdown to self-contained HTML with mermaid and syntax highlighting"
 license = "MIT"
-repository = "https://github.com/chemf/md-preview.nvim"
+repository = "https://github.com/feng409/s3-md-preview.nvim"
 
 [[bin]]
 name = "md-preview"

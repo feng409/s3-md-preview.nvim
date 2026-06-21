@@ -3,7 +3,7 @@
 ## Development Setup
 
 ```bash
-git clone https://github.com/chemf/md-preview.nvim.git
+git clone https://github.com/feng409/s3-md-preview.nvim.git
 cd md-preview.nvim
 cargo build
 cargo test

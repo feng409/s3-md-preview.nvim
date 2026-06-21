@@ -46,7 +46,7 @@ Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
-  "chemf/md-preview.nvim",
+  "feng409/s3-md-preview.nvim",
   build = "nvim -l build.lua",
   config = function()
     require("md-preview").setup({
@@ -61,7 +61,7 @@ Full configuration with S3 upload:
 
 ```lua
 {
-  "chemf/md-preview.nvim",
+  "feng409/s3-md-preview.nvim",
   build = "nvim -l build.lua",
   config = function()
     require("md-preview").setup({
@@ -84,7 +84,7 @@ All `s3` fields fall back to `MD_PREVIEW_*` environment variables when omitted, 
 
 ```lua
 {
-  "chemf/md-preview.nvim",
+  "feng409/s3-md-preview.nvim",
   build = "nvim -l build.lua",
   opts = { s3 = {} },
 }

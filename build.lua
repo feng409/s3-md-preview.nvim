@@ -68,7 +68,7 @@ local function download_binary(target, version)
   local bin_dir = ensure_bin_dir()
   local dest = bin_dir .. "/md-preview"
   local url = string.format(
-    "https://github.com/chemf/md-preview.nvim/releases/download/v%s/md-preview-%s.tar.gz",
+    "https://github.com/feng409/s3-md-preview.nvim/releases/download/v%s/md-preview-%s.tar.gz",
     version,
     target
   )

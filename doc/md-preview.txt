@@ -21,7 +21,7 @@ INSTALLATION                                                *md-preview-installa
 With lazy.nvim: >
 
   {
-    "chemf/md-preview.nvim",
+    "feng409/s3-md-preview.nvim",
     build = "nvim -l build.lua",
     config = function()
       require("md-preview").setup({})
