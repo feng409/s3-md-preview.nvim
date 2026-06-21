@@ -121,6 +121,10 @@ function M.preview(mode)
       vim.list_extend(cmd, { "--key-prefix", s3.key_prefix or "md-preview/" })
     end
 
+    if s3.custom_domain then
+      vim.list_extend(cmd, { "--custom-domain", s3.custom_domain })
+    end
+
     if s3.acl then
       vim.list_extend(cmd, { "--acl", s3.acl })
     end

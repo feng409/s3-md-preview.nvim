@@ -43,6 +43,11 @@ struct Cli {
     #[arg(long)]
     key: Option<String>,
 
+    /// Custom domain for public URL (e.g. static.example.com)
+    #[cfg(feature = "s3")]
+    #[arg(long, env = "MD_PREVIEW_CUSTOM_DOMAIN")]
+    custom_domain: Option<String>,
+
     /// S3 ACL (e.g. public-read)
     #[cfg(feature = "s3")]
     #[arg(long)]
@@ -89,6 +94,7 @@ fn main() -> Result<()> {
             &access_key_id,
             &secret_access_key,
             cli.acl.as_deref(),
+            cli.custom_domain.as_deref(),
         ))?;
         println!("{url}");
         return Ok(());

@@ -23,6 +23,7 @@ pub async fn upload_s3(
     access_key_id: &str,
     secret_access_key: &str,
     acl: Option<&str>,
+    custom_domain: Option<&str>,
 ) -> Result<String> {
     use s3::bucket::Bucket;
     use s3::creds::Credentials;
@@ -51,16 +52,24 @@ pub async fn upload_s3(
         .await
         .context("S3 upload failed")?;
 
-    Ok(public_url(endpoint, bucket_name, key))
+    Ok(public_url(endpoint, bucket_name, key, custom_domain))
 }
 
 /// Build the public object URL from endpoint, bucket, and key.
 #[cfg(feature = "s3")]
-fn public_url(endpoint: &str, bucket_name: &str, key: &str) -> String {
-    let host = endpoint
-        .trim_start_matches("https://")
-        .trim_start_matches("http://")
-        .trim_end_matches('/');
+fn public_url(endpoint: &str, bucket_name: &str, key: &str, custom_domain: Option<&str>) -> String {
     let key = key.trim_start_matches('/');
-    format!("https://{bucket_name}.{host}/{key}")
+    if let Some(domain) = custom_domain {
+        let domain = domain
+            .trim_start_matches("https://")
+            .trim_start_matches("http://")
+            .trim_end_matches('/');
+        format!("https://{domain}/{key}")
+    } else {
+        let host = endpoint
+            .trim_start_matches("https://")
+            .trim_start_matches("http://")
+            .trim_end_matches('/');
+        format!("https://{bucket_name}.{host}/{key}")
+    }
 }
