@@ -46,7 +46,6 @@ pub async fn upload_s3(
     if acl == Some("public-read") {
         bucket.add_header("x-amz-acl", "public-read");
     }
-
     bucket
         .put_object_with_content_type(key, html.as_bytes(), "text/html; charset=utf-8")
         .await

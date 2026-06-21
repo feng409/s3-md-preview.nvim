@@ -87,19 +87,23 @@ function M.check()
     end
   end
 
-  if config.s3 and config.s3.bucket then
+  if config.s3 then
     vim.health.start("S3 configuration")
 
-    local creds = config.credentials
-    if creds and creds.env_file then
-      local env_path = vim.fn.expand(creds.env_file)
-      if vim.fn.filereadable(env_path) ~= 1 then
-        vim.health.error("Credentials env file not readable: " .. env_path)
-      else
-        vim.health.ok("Credentials env file readable: " .. env_path)
-      end
+    local s3 = config.s3
+    local ak_env = s3.access_key or "MD_PREVIEW_ACCESS_KEY"
+    local sk_env = s3.secret_key or "MD_PREVIEW_SECRET_KEY"
+
+    if vim.env[ak_env] then
+      vim.health.ok("Access key found in $" .. ak_env)
     else
-      vim.health.warn("No credentials.env_file configured for S3")
+      vim.health.warn("Access key not found in $" .. ak_env)
+    end
+
+    if vim.env[sk_env] then
+      vim.health.ok("Secret key found in $" .. sk_env)
+    else
+      vim.health.warn("Secret key not found in $" .. sk_env)
     end
   end
 

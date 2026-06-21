@@ -50,20 +50,15 @@ output_dir ~
                                                     *md-preview-config-s3*
 s3 ~
   Table with S3 upload settings. When present, `:Md` defaults to upload mode.
+  All fields fall back to MD_PREVIEW_* environment variables when omitted.
 
-  bucket      S3 bucket name (required)
-  endpoint    S3-compatible endpoint URL (required)
-  region      AWS region (required)
+  bucket      S3 bucket name (env: MD_PREVIEW_BUCKET)
+  endpoint    S3-compatible endpoint URL (env: MD_PREVIEW_ENDPOINT)
+  region      AWS region (env: MD_PREVIEW_REGION)
   key_prefix  Object key prefix (default: "md-preview/")
   acl         Object ACL, e.g. "public-read" (optional)
-
-                                            *md-preview-config-credentials*
-credentials ~
-  Table for loading S3 credentials from a dotenv file.
-
-  env_file    Path to the env file (required)
-  id_key      Variable name for access key ID (required)
-  secret_key  Variable name for secret access key (required)
+  access_key  Env var name for access key ID (default: "MD_PREVIEW_ACCESS_KEY")
+  secret_key  Env var name for secret key (default: "MD_PREVIEW_SECRET_KEY")
 
                                               *md-preview-config-no_proxy*
 no_proxy ~
@@ -77,10 +72,21 @@ Example S3 configuration: >
       endpoint = "https://s3.amazonaws.com",
       region = "us-east-1",
     },
-    credentials = {
-      env_file = "~/.config/md-preview/.env",
-      id_key = "AWS_ACCESS_KEY_ID",
-      secret_key = "AWS_SECRET_ACCESS_KEY",
+  })
+
+Minimal (all from environment variables): >
+
+  require("md-preview").setup({ s3 = {} })
+
+Custom env var names (e.g. Tencent COS): >
+
+  require("md-preview").setup({
+    s3 = {
+      endpoint = "https://cos.ap-guangzhou.myqcloud.com",
+      bucket = "my-bucket",
+      region = "ap-guangzhou",
+      access_key = "TENCENT_SECRET_ID",
+      secret_key = "TENCENT_SECRET_KEY",
     },
   })
 

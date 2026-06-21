@@ -1,6 +1,4 @@
 mod css;
-#[cfg(feature = "s3")]
-mod env;
 mod output;
 mod render;
 
@@ -40,6 +38,11 @@ struct Cli {
     #[arg(long, default_value = "md-preview/")]
     key_prefix: String,
 
+    /// Explicit S3 object key (overrides --key-prefix + --title)
+    #[cfg(feature = "s3")]
+    #[arg(long)]
+    key: Option<String>,
+
     /// S3 ACL (e.g. public-read)
     #[cfg(feature = "s3")]
     #[arg(long)]
@@ -47,28 +50,13 @@ struct Cli {
 
     /// AWS access key ID
     #[cfg(feature = "s3")]
-    #[arg(long)]
+    #[arg(long, env = "MD_PREVIEW_ACCESS_KEY")]
     access_key_id: Option<String>,
 
     /// AWS secret access key
     #[cfg(feature = "s3")]
-    #[arg(long)]
+    #[arg(long, env = "MD_PREVIEW_SECRET_KEY")]
     secret_access_key: Option<String>,
-
-    /// Dotenv file for credentials
-    #[cfg(feature = "s3")]
-    #[arg(long)]
-    env_file: Option<String>,
-
-    /// Env var name for access key ID in --env-file
-    #[cfg(feature = "s3")]
-    #[arg(long, default_value = "AWS_ACCESS_KEY_ID")]
-    id_key: String,
-
-    /// Env var name for secret access key in --env-file
-    #[cfg(feature = "s3")]
-    #[arg(long, default_value = "AWS_SECRET_ACCESS_KEY")]
-    secret_key: String,
 }
 
 fn main() -> Result<()> {
@@ -88,7 +76,9 @@ fn main() -> Result<()> {
             .as_deref()
             .context("--endpoint is required when --bucket is set")?;
         let (access_key_id, secret_access_key) = resolve_credentials(&cli)?;
-        let key = format!("{}{}.html", cli.key_prefix, cli.title);
+        let key = cli
+            .key
+            .unwrap_or_else(|| format!("{}{}.html", cli.key_prefix, cli.title));
         let rt = tokio::runtime::Runtime::new().context("failed to start async runtime")?;
         let url = rt.block_on(output::upload_s3(
             &html,
@@ -121,13 +111,13 @@ fn resolve_credentials(cli: &Cli) -> Result<(String, String)> {
         return Ok((id.clone(), secret.clone()));
     }
 
-    if let Some(path) = &cli.env_file {
-        return env::parse_env_file(path, &cli.id_key, &cli.secret_key);
-    }
-
     use s3::creds::Credentials;
-    let creds = Credentials::from_env().context("missing AWS credentials in environment")?;
-    let id = creds.access_key.context("AWS_ACCESS_KEY_ID not set")?;
-    let secret = creds.secret_key.context("AWS_SECRET_ACCESS_KEY not set")?;
+    let creds = Credentials::from_env().context(
+        "missing credentials: set --access-key-id/--secret-access-key, \
+         or MD_PREVIEW_ACCESS_KEY/MD_PREVIEW_SECRET_KEY, \
+         or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY",
+    )?;
+    let id = creds.access_key.context("access key ID not found")?;
+    let secret = creds.secret_key.context("secret access key not found")?;
     Ok((id, secret))
 }

@@ -4,7 +4,6 @@ M.defaults = {
   bin = nil,
   output_dir = vim.fn.stdpath("cache") .. "/md-preview",
   s3 = nil,
-  credentials = nil,
   no_proxy = true,
 }
 
