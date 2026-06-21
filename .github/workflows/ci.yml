@@ -9,12 +9,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
         with:
-          components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo fmt --check
-      - run: cargo clippy -- -D warnings
-      - run: cargo test
-      - run: cargo build --release
-      - run: cargo build --release --no-default-features
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm test -- --run
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Smoke render sample
+        run: |
+          cat > /tmp/sample.md <<'EOF'
+          # Sample
+
+          ```mermaid
+          block-beta
+          columns 2
+          a["chunk_000"]
+          b["chunk_001"]
+          ```
+          EOF
+          ./bin/md-preview --title ci-sample --output-dir /tmp/md-preview --base-dir /tmp < /tmp/sample.md
+          test -f /tmp/md-preview/ci-sample.html

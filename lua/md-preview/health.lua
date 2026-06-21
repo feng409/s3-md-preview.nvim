@@ -5,12 +5,15 @@ local function plugin_dir()
 end
 
 local function plugin_version()
-  local cargo = plugin_dir() .. "/Cargo.toml"
-  if vim.fn.filereadable(cargo) ~= 1 then
+  local package_json = plugin_dir() .. "/package.json"
+  if vim.fn.filereadable(package_json) ~= 1 then
     return nil
   end
-  for _, line in ipairs(vim.fn.readfile(cargo)) do
+  for _, line in ipairs(vim.fn.readfile(package_json)) do
     local ver = line:match('^version = "(.+)"$')
+    if not ver then
+      ver = line:match('^%s*"version"%s*:%s*"([^"]+)"')
+    end
     if ver then
       return ver
     end
@@ -25,9 +28,9 @@ local function parse_version(output)
   return output:match("(%d+%.%d+%.%d+)") or output:match("^%s*(%S+)%s*$")
 end
 
-local function run_version(bin)
+local function run_command(cmd)
   local lines = {}
-  local job_id = vim.fn.jobstart({ bin, "--version" }, {
+  local job_id = vim.fn.jobstart(cmd, {
     stdout_buffered = true,
     stderr_buffered = true,
     on_stdout = function(_, data)
@@ -40,7 +43,11 @@ local function run_version(bin)
     return nil
   end
   vim.fn.jobwait({ job_id }, 5000)
-  return parse_version(table.concat(lines, ""))
+  return table.concat(lines, "")
+end
+
+local function run_version(bin)
+  return parse_version(run_command({ bin, "--version" }))
 end
 
 local function dir_writable(path)
@@ -105,6 +112,35 @@ function M.check()
     else
       vim.health.warn("Secret key not found in $" .. sk_env)
     end
+  end
+
+  vim.health.start("Node runtime")
+
+  local node = vim.fn.exepath("node")
+  if node == "" then
+    vim.health.error("Node.js >= 20 is required but node was not found")
+  else
+    local version = run_command({ node, "--version" }) or ""
+    local major = tonumber(version:match("v(%d+)"))
+    if not major or major < 20 then
+      vim.health.error("Node.js >= 20 is required, found " .. version:gsub("%s+", ""))
+    else
+      vim.health.ok("Node found: " .. node .. " (" .. version:gsub("%s+", "") .. ")")
+    end
+  end
+
+  local npm = vim.fn.exepath("npm")
+  if npm == "" then
+    vim.health.error("npm is required but was not found")
+  else
+    vim.health.ok("npm found: " .. npm)
+  end
+
+  local mmdc = plugin_dir() .. "/node_modules/.bin/mmdc"
+  if vim.fn.executable(mmdc) == 1 then
+    vim.health.ok("mmdc found: " .. mmdc)
+  else
+    vim.health.warn("mmdc not found; run plugin build or `npm ci && npm run build`")
   end
 
   vim.health.start("Local output")

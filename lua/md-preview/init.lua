@@ -45,7 +45,6 @@ function M.resolve_bin()
   local dir = plugin_dir()
   local candidates = {
     dir .. "/bin/md-preview",
-    dir .. "/target/release/md-preview",
   }
 
   for _, path in ipairs(candidates) do
@@ -98,6 +97,10 @@ function M.preview(mode)
   end
 
   local cmd = { bin, "--title", title }
+  local base_dir = vim.fn.expand("%:p:h")
+  if base_dir ~= "" then
+    vim.list_extend(cmd, { "--base-dir", base_dir })
+  end
 
   if mode == "local" then
     vim.list_extend(cmd, { "--output-dir", cfg.output_dir })
