@@ -24,6 +24,8 @@ pub async fn upload_s3(
     secret_access_key: &str,
     acl: Option<&str>,
     custom_domain: Option<&str>,
+    path_style: bool,
+    presign_expiry: u32,
 ) -> Result<String> {
     use s3::bucket::Bucket;
     use s3::creds::Credentials;
@@ -42,7 +44,11 @@ pub async fn upload_s3(
         endpoint: endpoint.to_string(),
     };
 
-    let mut bucket = Bucket::new(bucket_name, region, credentials)?;
+    let mut bucket = if path_style {
+        Bucket::new(bucket_name, region, credentials)?.with_path_style()
+    } else {
+        Bucket::new(bucket_name, region, credentials)?
+    };
 
     if acl == Some("public-read") {
         bucket.add_header("x-amz-acl", "public-read");
@@ -52,12 +58,26 @@ pub async fn upload_s3(
         .await
         .context("S3 upload failed")?;
 
-    Ok(public_url(endpoint, bucket_name, key, custom_domain))
+    if presign_expiry > 0 {
+        let url = bucket
+            .presign_get(key, presign_expiry, None)
+            .await
+            .context("failed to generate pre-signed URL")?;
+        Ok(url)
+    } else {
+        Ok(public_url(endpoint, bucket_name, key, custom_domain, path_style))
+    }
 }
 
 /// Build the public object URL from endpoint, bucket, and key.
 #[cfg(feature = "s3")]
-fn public_url(endpoint: &str, bucket_name: &str, key: &str, custom_domain: Option<&str>) -> String {
+fn public_url(
+    endpoint: &str,
+    bucket_name: &str,
+    key: &str,
+    custom_domain: Option<&str>,
+    path_style: bool,
+) -> String {
     let key = key.trim_start_matches('/');
     if let Some(domain) = custom_domain {
         let domain = domain
@@ -70,6 +90,10 @@ fn public_url(endpoint: &str, bucket_name: &str, key: &str, custom_domain: Optio
             .trim_start_matches("https://")
             .trim_start_matches("http://")
             .trim_end_matches('/');
-        format!("https://{bucket_name}.{host}/{key}")
+        if path_style {
+            format!("https://{host}/{bucket_name}/{key}")
+        } else {
+            format!("https://{bucket_name}.{host}/{key}")
+        }
     }
 }

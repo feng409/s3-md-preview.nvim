@@ -53,6 +53,16 @@ struct Cli {
     #[arg(long)]
     acl: Option<String>,
 
+    /// Use path-style URLs (required for MinIO behind reverse proxy)
+    #[cfg(feature = "s3")]
+    #[arg(long, env = "MD_PREVIEW_PATH_STYLE")]
+    path_style: bool,
+
+    /// Generate pre-signed URL with given expiry in seconds (0 = disabled)
+    #[cfg(feature = "s3")]
+    #[arg(long, env = "MD_PREVIEW_PRESIGN_EXPIRY", default_value = "0")]
+    presign_expiry: u32,
+
     /// AWS access key ID
     #[cfg(feature = "s3")]
     #[arg(long, env = "MD_PREVIEW_ACCESS_KEY")]
@@ -95,6 +105,8 @@ fn main() -> Result<()> {
             &secret_access_key,
             cli.acl.as_deref(),
             cli.custom_domain.as_deref(),
+            cli.path_style,
+            cli.presign_expiry,
         ))?;
         println!("{url}");
         return Ok(());

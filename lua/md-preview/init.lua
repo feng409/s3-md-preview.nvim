@@ -129,6 +129,14 @@ function M.preview(mode)
       vim.list_extend(cmd, { "--acl", s3.acl })
     end
 
+    if s3.path_style then
+      vim.list_extend(cmd, { "--path-style" })
+    end
+
+    if s3.presign_expiry then
+      vim.list_extend(cmd, { "--presign-expiry", tostring(s3.presign_expiry) })
+    end
+
     local ak_env = s3.access_key or "MD_PREVIEW_ACCESS_KEY"
     local sk_env = s3.secret_key or "MD_PREVIEW_SECRET_KEY"
     local ak = vim.env[ak_env]
