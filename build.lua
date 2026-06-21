@@ -98,8 +98,9 @@ local function download_binary(target, version)
 end
 
 local function build_from_source()
-  print("[md-preview] Building from source with cargo")
-  local ok = run("cargo build --release")
+  local dir = plugin_dir()
+  print("[md-preview] Building from source with cargo in " .. dir)
+  local ok = run(string.format('cargo build --release --manifest-path "%s/Cargo.toml"', dir))
   if not ok then
     vim.api.nvim_err_writeln("[md-preview] cargo build failed")
     return false
